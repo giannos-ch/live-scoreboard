@@ -41,7 +41,7 @@ Amber::Server.configure do
   end
 
   routes :web do
-    websocket "/socket", GameSocket
+    websocket "/api/socket", GameSocket
   end
 
   routes :static do

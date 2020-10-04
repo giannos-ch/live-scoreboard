@@ -81,8 +81,8 @@ class GameController < ApplicationController
           json results.to_json
         end
       end
-      body = request.body
-      game.update!(data: body.gets) if body
+      game.update!(data: params["data"])
+      GameSocket.broadcast("message", "game:"+params["id"], "message_new", {"message" => params["data"]})
     else
       results = {status: "not found"}
       respond_with 404 do

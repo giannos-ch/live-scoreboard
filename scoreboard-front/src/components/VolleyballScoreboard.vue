@@ -2,10 +2,10 @@
   <div class="wrapper" v-on:click="auth">
     <div class="editor">
       <span v-if="editing">
-        <b-button v-on:click="points_h--">Home--</b-button>
-        <b-button v-on:click="points_a--">Away--</b-button>
-        <b-button v-on:click="end_set">End set</b-button>
-        <b-button v-on:click="undo_end_set">Undo end set</b-button>
+        <b-button v-on:click="points_h--;update_data()">Home--</b-button>
+        <b-button v-on:click="points_a--;update_data()">Away--</b-button>
+        <b-button v-on:click="end_set();update_data()">End set</b-button>
+        <b-button v-on:click="undo_end_set();update_data()">Undo end set</b-button>
       </span>
     </div>
     <b-row style="margin-top:80px">
@@ -25,7 +25,7 @@
           <label
             :key="points_h"
             class="large1 unselectable"
-            v-on:click="editing && points_h++"
+            v-on:click="points_h_click"
           >{{pad2(points_h)}}</label>
         </transition>
         <label class="large1 unselectable">:</label>
@@ -33,7 +33,7 @@
           <label
             :key="points_a"
             class="large1 unselectable"
-            v-on:click="editing && points_a++"
+            v-on:click="points_a_click"
           >{{pad2(points_a)}}</label>
         </transition>
         <transition name="bounce" mode="out-in">
@@ -71,6 +71,8 @@
 </template>
 
 <script>
+import { Socket } from '@/amber.js'
+
 export default {
   name: 'Scoreboard',
   data () {
@@ -90,6 +92,26 @@ export default {
       editing: false
     }
   },
+  created () {
+    const wsapi = this.$api.replace('http://', 'ws://')
+    let socket = new Socket(wsapi + 'socket')
+    socket.connect().then(() => {
+      const gameId = this.$route.params['game_id']
+      let channel = socket.channel('game:' + gameId)
+      console.log(channel)
+      channel.join()
+      channel.on('message_new', msg => {
+        const data = JSON.parse(msg['message'])
+        this.home = data['home']
+        this.away = data['away']
+        this.points_h = data['points_h']
+        this.points_a = data['points_a']
+        this.sets_h = data['sets_h']
+        this.sets_a = data['sets_a']
+        this.prev_sets = data['prev_sets']
+      })
+    })
+  },
   methods: {
     pad2 (i) {
       var s = '00' + i
@@ -97,6 +119,18 @@ export default {
     },
     auth (evt) {
       this.editing ^= evt.detail === 3
+    },
+    points_h_click () {
+      if (this.editing) {
+        this.points_h++
+        this.update_data()
+      }
+    },
+    points_a_click () {
+      if (this.editing) {
+        this.points_a++
+        this.update_data()
+      }
     },
     end_set () {
       const setNo = this.sets_h + this.sets_a
@@ -115,6 +149,24 @@ export default {
       this.points_a = this.prev_sets[setNo - 1][1]
       if (this.points_h < this.points_a) this.sets_a--
       else if (this.points_h > this.points_a) this.sets_h--
+    },
+    update_data () {
+      console.log(this.$route.params)
+      const api = this.$api
+      const gameId = this.$route.params['game_id']
+      const data = {
+        home: this.home,
+        away: this.away,
+        points_h: this.points_h,
+        points_a: this.points_a,
+        sets_h: this.sets_h,
+        sets_a: this.sets_a,
+        prev_sets: this.prev_sets
+      }
+      this.axios.put(api + 'games/' + gameId + '/update_data', {
+        password: 'pass',
+        data: JSON.stringify(data)
+      })
     }
   }
 }
