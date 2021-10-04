@@ -93,7 +93,8 @@ export default {
     }
   },
   created () {
-    const wsapi = this.$api.replace('http://', 'ws://')
+    const api = process.env.VUE_APP_API_HOST
+    const wsapi = api.replace('http://', 'ws://')
     let socket = new Socket(wsapi + 'socket')
     socket.connect().then(() => {
       const gameId = this.$route.params['game_id']
@@ -152,7 +153,7 @@ export default {
     },
     update_data () {
       console.log(this.$route.params)
-      const api = this.$api
+      const api = process.env.VUE_APP_API_HOST
       const gameId = this.$route.params['game_id']
       const data = {
         home: this.home,

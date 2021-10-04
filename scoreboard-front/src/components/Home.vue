@@ -16,7 +16,7 @@ export default {
     }
   },
   mounted () {
-    const api = this.$api
+    const api = process.env.VUE_APP_API_HOST
     this.axios.get(api + 'games').then(response => {
       this.games = response.data
     })

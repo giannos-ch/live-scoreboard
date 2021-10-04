@@ -178,7 +178,7 @@ export class Socket {
   connect (params) {
     this.params = params
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.ws = new WebSocket(this.endpoint)
       this.ws.onmessage = msg => {
         this.handleMessage(msg)
